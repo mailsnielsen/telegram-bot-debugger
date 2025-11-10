@@ -14,7 +14,6 @@ A terminal-based debugging tool for Telegram bots. Discover chats, test messages
 - Test message sending
 - Analytics and statistics
 - Raw JSON API inspector (25+ update types)
-- Forum topic support
 
 ## Quick Start
 
@@ -65,8 +64,6 @@ cargo build --release
 **Private chats**: Send a message to your bot, check Discovery screen. Positive integer.
 
 **Groups/Channels**: Add bot, send message, check Discovery. Negative integer starting with `-100`.
-
-**Forum topics**: Add bot to forum group, send message in topic, view Thread IDs in Discovery.
 
 ## Configuration
 
