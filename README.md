@@ -1,7 +1,9 @@
 # Telegram Bot Debugger
 
-[![CI](https://github.com/YOUR_USERNAME/telegram-bot-debugger/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/telegram-bot-debugger/actions/workflows/ci.yml)
+[![CI](https://github.com/mailsnielsen/telegram-bot-debugger/actions/workflows/ci.yml/badge.svg)](https://github.com/mailsnielsen/telegram-bot-debugger/actions/workflows/ci.yml)
+[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![codecov](https://codecov.io/gh/mailsnielsen/telegram-bot-debugger/branch/master/graph/badge.svg)](https://codecov.io/gh/mailsnielsen/telegram-bot-debugger)
 
 A terminal-based debugging tool for Telegram bots. Discover chats, test messages, monitor activity, and inspect raw API responses.
 
