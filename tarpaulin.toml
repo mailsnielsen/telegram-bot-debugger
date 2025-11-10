@@ -6,8 +6,8 @@ out = ["Xml", "Html", "Lcov"]
 fail-under = 80.0
 
 [run]
-# Timeout for individual tests (in seconds)
-timeout = 300
+# Timeout for individual tests
+timeout = "300s"
 
 # Run tests with all features enabled
 all-features = true
