@@ -2,15 +2,15 @@ use anyhow::Result;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use ratatui::{backend::CrosstermBackend, Terminal};
+use ratatui::{Terminal, backend::CrosstermBackend};
 use std::io;
 use std::time::Duration;
 use tokio::time::sleep;
 
 use telegram_bot_debugger::app::{App, Screen};
-use telegram_bot_debugger::input::{try_handle_global_keys, try_handle_raw_json_keys, KeyAction};
+use telegram_bot_debugger::input::{KeyAction, try_handle_global_keys, try_handle_raw_json_keys};
 use telegram_bot_debugger::ui::render_frame;
 
 #[tokio::main]
@@ -66,7 +66,9 @@ async fn run_app<B: ratatui::backend::Backend>(
                 // Two-phase handling: Screen-specific first, then global fallback
                 let handled = match app.ui.current_screen {
                     Screen::TokenInput => handle_token_input(app, key.code).await?,
-                    Screen::TestMessage => handle_test_message(app, key.code, key.modifiers).await?,
+                    Screen::TestMessage => {
+                        handle_test_message(app, key.code, key.modifiers).await?
+                    }
                     Screen::Monitor => handle_monitor(app, key.code).await?,
                     Screen::Discovery => handle_discovery(app, key.code, key.modifiers).await?,
                     Screen::Messages => handle_messages(app, key.code, key.modifiers).await?,
@@ -77,10 +79,10 @@ async fn run_app<B: ratatui::backend::Backend>(
                 if handled == KeyAction::NotHandled {
                     try_handle_global_keys(app, key.code, key.modifiers).await?;
                 }
-                
+
                 // Try RawJson-specific keys if applicable
                 try_handle_raw_json_keys(app, key.code)?;
-                
+
                 // Mark for re-render after input processing
                 app.mark_dirty();
             }
@@ -96,7 +98,7 @@ async fn run_app<B: ratatui::backend::Backend>(
         if app.ui.should_quit {
             break;
         }
-        
+
         // Small sleep only when monitoring to check for updates
         // Otherwise the event poll provides the timing
         if app.monitoring.is_active() {
@@ -141,7 +143,11 @@ async fn handle_token_input(app: &mut App, key: KeyCode) -> Result<KeyAction> {
 ///
 /// Supports both selected chat mode and manual chat ID entry.
 /// Returns `KeyAction::Handled` for screen-specific keys, `NotHandled` for global keys.
-async fn handle_test_message(app: &mut App, key: KeyCode, modifiers: KeyModifiers) -> Result<KeyAction> {
+async fn handle_test_message(
+    app: &mut App,
+    key: KeyCode,
+    modifiers: KeyModifiers,
+) -> Result<KeyAction> {
     use telegram_bot_debugger::app::{InputFocus, TestMessageMode};
 
     match key {
@@ -171,16 +177,14 @@ async fn handle_test_message(app: &mut App, key: KeyCode, modifiers: KeyModifier
         KeyCode::Char(c) => {
             // Insert character into the currently focused field
             match app.ui.test_message_mode {
-                TestMessageMode::ManualChatId => {
-                    match app.ui.test_message_input_focus {
-                        InputFocus::ChatId => {
-                            app.ui.manual_chat_id_input.push(c);
-                        }
-                        InputFocus::MessageText => {
-                            app.ui.test_message_input.push(c);
-                        }
+                TestMessageMode::ManualChatId => match app.ui.test_message_input_focus {
+                    InputFocus::ChatId => {
+                        app.ui.manual_chat_id_input.push(c);
                     }
-                }
+                    InputFocus::MessageText => {
+                        app.ui.test_message_input.push(c);
+                    }
+                },
                 TestMessageMode::SelectedChat => {
                     // Only message field available
                     app.ui.test_message_input.push(c);
@@ -191,16 +195,14 @@ async fn handle_test_message(app: &mut App, key: KeyCode, modifiers: KeyModifier
         KeyCode::Backspace => {
             // Delete from the currently focused field
             match app.ui.test_message_mode {
-                TestMessageMode::ManualChatId => {
-                    match app.ui.test_message_input_focus {
-                        InputFocus::ChatId => {
-                            app.ui.manual_chat_id_input.pop();
-                        }
-                        InputFocus::MessageText => {
-                            app.ui.test_message_input.pop();
-                        }
+                TestMessageMode::ManualChatId => match app.ui.test_message_input_focus {
+                    InputFocus::ChatId => {
+                        app.ui.manual_chat_id_input.pop();
                     }
-                }
+                    InputFocus::MessageText => {
+                        app.ui.test_message_input.pop();
+                    }
+                },
                 TestMessageMode::SelectedChat => {
                     app.ui.test_message_input.pop();
                 }
@@ -236,7 +238,11 @@ async fn handle_monitor(app: &mut App, key: KeyCode) -> Result<KeyAction> {
 /// Handles input on the discovery screen (chat list).
 ///
 /// Handles navigation, export, and Enter to view messages. Global keys handled by common handler.
-async fn handle_discovery(app: &mut App, key: KeyCode, _modifiers: KeyModifiers) -> Result<KeyAction> {
+async fn handle_discovery(
+    app: &mut App,
+    key: KeyCode,
+    _modifiers: KeyModifiers,
+) -> Result<KeyAction> {
     match key {
         KeyCode::Up => {
             app.previous_chat();
@@ -263,7 +269,11 @@ async fn handle_discovery(app: &mut App, key: KeyCode, _modifiers: KeyModifiers)
 /// Handles input on the messages screen (viewing messages for a specific chat).
 ///
 /// Handles message navigation, export, and 'm' to send test message. Global keys handled by common handler.
-async fn handle_messages(app: &mut App, key: KeyCode, _modifiers: KeyModifiers) -> Result<KeyAction> {
+async fn handle_messages(
+    app: &mut App,
+    key: KeyCode,
+    _modifiers: KeyModifiers,
+) -> Result<KeyAction> {
     match key {
         KeyCode::Up => {
             app.previous_message();

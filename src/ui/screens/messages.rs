@@ -1,16 +1,16 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, List, ListItem, Paragraph, Wrap},
-    Frame,
 };
 
 use crate::app::App;
 
 pub fn render(frame: &mut Frame, area: Rect, app: &App) {
     let selected_chat = app.get_selected_chat();
-    
+
     if selected_chat.is_none() {
         let empty_message = Paragraph::new(vec![
             Line::from(""),
@@ -32,7 +32,10 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
     if messages.is_empty() {
         let empty_message = Paragraph::new(vec![
             Line::from(""),
-            Line::from(format!("No messages found for: {}", chat.chat.display_name())),
+            Line::from(format!(
+                "No messages found for: {}",
+                chat.chat.display_name()
+            )),
             Line::from(""),
             Line::from("Messages are shown from the last 50 updates received."),
             Line::from("Use the Live Monitor (F5) to collect more messages."),
@@ -62,19 +65,23 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
             };
 
             let style = if i == app.ui.selected_message_index {
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::White)
             };
 
             // Extract info based on update type
             let update_type = update.get_update_type();
-            
+
             let (timestamp, sender, text_preview) = if let Some(message) = &update.message {
                 let ts = chrono::DateTime::from_timestamp(message.date, 0)
                     .map(|dt| dt.format("%H:%M:%S").to_string())
                     .unwrap_or_else(|| "Unknown".to_string());
-                let sender_name = message.from.as_ref()
+                let sender_name = message
+                    .from
+                    .as_ref()
                     .map(|u| u.username.clone().unwrap_or_else(|| u.first_name.clone()))
                     .unwrap_or_else(|| "Unknown".to_string());
                 let text = message.text.as_deref().unwrap_or("[No text]");
@@ -99,7 +106,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
                 let ts = chrono::DateTime::from_timestamp(edited_message.date, 0)
                     .map(|dt| dt.format("%H:%M:%S").to_string())
                     .unwrap_or_else(|| "Unknown".to_string());
-                let sender_name = edited_message.from.as_ref()
+                let sender_name = edited_message
+                    .from
+                    .as_ref()
                     .map(|u| u.username.clone().unwrap_or_else(|| u.first_name.clone()))
                     .unwrap_or_else(|| "Edited".to_string());
                 let text = edited_message.text.as_deref().unwrap_or("[No text]");
@@ -108,10 +117,14 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
                 } else {
                     text.to_string()
                 };
-                (ts, format!("{} (edited)", sender_name), preview)
+                (ts, format!("{sender_name} (edited)"), preview)
             } else {
                 // For other update types, show the type and update ID
-                ("N/A".to_string(), update_type.clone(), format!("[{}]", update_type))
+                (
+                    "N/A".to_string(),
+                    update_type.clone(),
+                    format!("[{update_type}]"),
+                )
             };
 
             let content = format!("{indicator}{timestamp} | {sender} | {text_preview}");
@@ -120,7 +133,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         .collect();
 
     let message_list = List::new(message_items)
-        .block(Block::bordered().title("Messages (↑/↓ to navigate | m to send message | e to export | Esc to go back)"));
+        .block(Block::bordered().title(
+            "Messages (↑/↓ to navigate | m to send message | e to export | Esc to go back)",
+        ));
 
     frame.render_widget(message_list, chunks[0]);
 
@@ -130,7 +145,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
             Line::from(""),
             Line::from(Span::styled(
                 "Message Details:",
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
             )),
             Line::from(""),
         ];
@@ -138,21 +155,27 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         // Show update type at the top
         let update_type = selected_message.get_update_type();
         details.push(Line::from(Span::styled(
-            format!("Type: {}", update_type),
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            format!("Type: {update_type}"),
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
         )));
-        details.push(Line::from(format!("Update ID: {}", selected_message.update_id)));
+        details.push(Line::from(format!(
+            "Update ID: {}",
+            selected_message.update_id
+        )));
         details.push(Line::from(""));
 
         if let Some(message) = &selected_message.message {
             details.push(Line::from(format!("Message ID: {}", message.message_id)));
             details.push(Line::from(format!("Chat ID: {}", message.chat.id)));
-            
+
             if let Some(thread_id) = message.message_thread_id {
                 details.push(Line::from(format!("Thread ID: {thread_id}")));
             }
 
-            details.push(Line::from(format!("Date: {}", 
+            details.push(Line::from(format!(
+                "Date: {}",
                 chrono::DateTime::from_timestamp(message.date, 0)
                     .map(|dt| dt.format("%Y-%m-%d %H:%M:%S").to_string())
                     .unwrap_or_else(|| "Unknown".to_string())
@@ -184,9 +207,13 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
                 details.push(Line::from(format!("  {text}")));
             }
         } else if let Some(channel_post) = &selected_message.channel_post {
-            details.push(Line::from(format!("Message ID: {}", channel_post.message_id)));
+            details.push(Line::from(format!(
+                "Message ID: {}",
+                channel_post.message_id
+            )));
             details.push(Line::from(format!("Chat ID: {}", channel_post.chat.id)));
-            details.push(Line::from(format!("Date: {}", 
+            details.push(Line::from(format!(
+                "Date: {}",
                 chrono::DateTime::from_timestamp(channel_post.date, 0)
                     .map(|dt| dt.format("%Y-%m-%d %H:%M:%S").to_string())
                     .unwrap_or_else(|| "Unknown".to_string())
@@ -201,14 +228,18 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
                 details.push(Line::from(format!("  {text}")));
             }
         } else if let Some(edited_message) = &selected_message.edited_message {
-            details.push(Line::from(format!("Message ID: {}", edited_message.message_id)));
+            details.push(Line::from(format!(
+                "Message ID: {}",
+                edited_message.message_id
+            )));
             details.push(Line::from(format!("Chat ID: {}", edited_message.chat.id)));
-            
+
             if let Some(thread_id) = edited_message.message_thread_id {
                 details.push(Line::from(format!("Thread ID: {thread_id}")));
             }
 
-            details.push(Line::from(format!("Date: {}", 
+            details.push(Line::from(format!(
+                "Date: {}",
                 chrono::DateTime::from_timestamp(edited_message.date, 0)
                     .map(|dt| dt.format("%Y-%m-%d %H:%M:%S").to_string())
                     .unwrap_or_else(|| "Unknown".to_string())
@@ -246,7 +277,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
                 Style::default().fg(Color::Yellow),
             )));
             details.push(Line::from(""));
-            details.push(Line::from("Check the Raw JSON view (press 4) for complete details."));
+            details.push(Line::from(
+                "Check the Raw JSON view (press 4) for complete details.",
+            ));
         }
 
         details.push(Line::from(""));
@@ -264,4 +297,3 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         frame.render_widget(details_paragraph, chunks[1]);
     }
 }
-

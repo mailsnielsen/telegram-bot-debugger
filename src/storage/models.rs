@@ -8,8 +8,7 @@ use crate::telegram::{DiscoveredChat, TopicInfo};
 /// Root cache data structure.
 ///
 /// Contains all data that needs to be persisted between application runs.
-#[derive(Debug, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct CacheData {
     /// The bot token
     pub token: Option<String>,
@@ -18,7 +17,6 @@ pub struct CacheData {
     /// Aggregated analytics data
     pub analytics: AnalyticsData,
 }
-
 
 /// Serializable representation of a discovered chat for caching.
 ///
@@ -55,8 +53,7 @@ impl From<&DiscoveredChat> for CachedChat {
 /// Analytics data for persistent storage.
 ///
 /// Tracks message statistics across all chats.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AnalyticsData {
     /// Total number of messages processed
     pub total_messages: usize,
@@ -65,7 +62,6 @@ pub struct AnalyticsData {
     /// Message distribution by hour of day (0-23)
     pub hourly_distribution: HashMap<i64, usize>,
 }
-
 
 impl AnalyticsData {
     // All methods currently accessed directly through struct fields
@@ -93,7 +89,7 @@ mod tests {
         discovered.chat.title = Some("Test Group".to_string());
         discovered.chat.username = Some("testgroup".to_string());
         discovered.topics = vec![create_test_topic(1, Some("Topic 1".to_string()), 5)];
-        
+
         let cached = CachedChat::from(&discovered);
 
         assert_eq!(cached.chat_id, 200);
@@ -121,4 +117,3 @@ mod tests {
         assert_eq!(analytics.hourly_distribution.len(), 0);
     }
 }
-

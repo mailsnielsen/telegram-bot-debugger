@@ -113,7 +113,7 @@ mod tests {
     async fn test_esc_hierarchical_navigation_from_discovery() {
         let mut app = create_test_app();
         app.ui.current_screen = Screen::Discovery;
-        
+
         let result = try_handle_global_keys(&mut app, KeyCode::Esc, KeyModifiers::empty()).await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), KeyAction::Handled);
@@ -124,7 +124,7 @@ mod tests {
     async fn test_esc_from_home_quits() {
         let mut app = create_test_app();
         app.ui.current_screen = Screen::Home;
-        
+
         let result = try_handle_global_keys(&mut app, KeyCode::Esc, KeyModifiers::empty()).await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), KeyAction::Handled);
@@ -135,7 +135,7 @@ mod tests {
     async fn test_esc_from_messages_goes_to_discovery() {
         let mut app = create_test_app();
         app.ui.current_screen = Screen::Messages;
-        
+
         let result = try_handle_global_keys(&mut app, KeyCode::Esc, KeyModifiers::empty()).await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), KeyAction::Handled);
@@ -145,8 +145,9 @@ mod tests {
     #[tokio::test]
     async fn test_help_key() {
         let mut app = create_test_app();
-        
-        let result = try_handle_global_keys(&mut app, KeyCode::Char('h'), KeyModifiers::empty()).await;
+
+        let result =
+            try_handle_global_keys(&mut app, KeyCode::Char('h'), KeyModifiers::empty()).await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), KeyAction::Handled);
         assert_eq!(app.ui.current_screen, Screen::Help);
@@ -155,8 +156,9 @@ mod tests {
     #[tokio::test]
     async fn test_number_key_1() {
         let mut app = create_test_app();
-        
-        let result = try_handle_global_keys(&mut app, KeyCode::Char('1'), KeyModifiers::empty()).await;
+
+        let result =
+            try_handle_global_keys(&mut app, KeyCode::Char('1'), KeyModifiers::empty()).await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), KeyAction::Handled);
         assert_eq!(app.ui.current_screen, Screen::Discovery);
@@ -165,8 +167,9 @@ mod tests {
     #[tokio::test]
     async fn test_unknown_key_not_handled() {
         let mut app = create_test_app();
-        
-        let result = try_handle_global_keys(&mut app, KeyCode::Char('x'), KeyModifiers::empty()).await;
+
+        let result =
+            try_handle_global_keys(&mut app, KeyCode::Char('x'), KeyModifiers::empty()).await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), KeyAction::NotHandled);
     }
@@ -176,7 +179,7 @@ mod tests {
     fn test_raw_json_up_key() {
         let mut app = create_test_app();
         app.ui.current_screen = Screen::RawJson;
-        
+
         let result = try_handle_raw_json_keys(&mut app, KeyCode::Up);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), KeyAction::Handled);
@@ -186,7 +189,7 @@ mod tests {
     fn test_raw_json_down_key() {
         let mut app = create_test_app();
         app.ui.current_screen = Screen::RawJson;
-        
+
         let result = try_handle_raw_json_keys(&mut app, KeyCode::Down);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), KeyAction::Handled);
@@ -196,7 +199,7 @@ mod tests {
     fn test_raw_json_export_key() {
         let mut app = create_test_app();
         app.ui.current_screen = Screen::RawJson;
-        
+
         let result = try_handle_raw_json_keys(&mut app, KeyCode::Char('e'));
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), KeyAction::Handled);
@@ -206,7 +209,7 @@ mod tests {
     fn test_raw_json_keys_on_wrong_screen() {
         let mut app = create_test_app();
         app.ui.current_screen = Screen::Home; // Not RawJson
-        
+
         let result = try_handle_raw_json_keys(&mut app, KeyCode::Up);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), KeyAction::NotHandled);
@@ -216,7 +219,7 @@ mod tests {
     fn test_raw_json_unknown_key() {
         let mut app = create_test_app();
         app.ui.current_screen = Screen::RawJson;
-        
+
         let result = try_handle_raw_json_keys(&mut app, KeyCode::Char('x'));
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), KeyAction::NotHandled);
@@ -230,4 +233,3 @@ mod tests {
         assert_ne!(KeyAction::Handled, KeyAction::NotHandled);
     }
 }
-

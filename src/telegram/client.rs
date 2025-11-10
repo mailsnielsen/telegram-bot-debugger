@@ -122,7 +122,7 @@ impl TelegramClient {
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// let client = TelegramClient::new("YOUR_TOKEN".to_string());
-    /// 
+    ///
     /// // Fetch updates with 30 second timeout
     /// let updates = client.get_updates(None, Some(30)).await?;
     /// for update in updates.result {
@@ -131,9 +131,13 @@ impl TelegramClient {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn get_updates(&self, offset: Option<i64>, timeout: Option<i64>) -> Result<GetUpdatesResponse> {
+    pub async fn get_updates(
+        &self,
+        offset: Option<i64>,
+        timeout: Option<i64>,
+    ) -> Result<GetUpdatesResponse> {
         let url = format!("{}/getUpdates", self.base_url);
-        
+
         let mut params = vec![];
         if let Some(offset) = offset {
             params.push(("offset", offset.to_string()));
@@ -181,13 +185,13 @@ impl TelegramClient {
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// let client = TelegramClient::new("YOUR_TOKEN".to_string());
-    /// 
+    ///
     /// // Send a simple message
     /// let response = client.send_message(123456789, "Hello, World!", None).await?;
     /// if response.ok {
     ///     println!("Message sent successfully!");
     /// }
-    /// 
+    ///
     /// // Send to a specific topic in a forum group
     /// client.send_message(123456789, "Topic message", Some(42)).await?;
     /// # Ok(())
@@ -253,7 +257,8 @@ mod tests {
             .mock("GET", "/bottest_token/getMe")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(r#"{
+            .with_body(
+                r#"{
                 "ok": true,
                 "result": {
                     "id": 123456789,
@@ -261,7 +266,8 @@ mod tests {
                     "first_name": "Test Bot",
                     "username": "test_bot"
                 }
-            }"#)
+            }"#,
+            )
             .create()
     }
 
@@ -270,11 +276,13 @@ mod tests {
             .mock("GET", "/botinvalid_token/getMe")
             .with_status(401)
             .with_header("content-type", "application/json")
-            .with_body(r#"{
+            .with_body(
+                r#"{
                 "ok": false,
                 "error_code": 401,
                 "description": "Unauthorized"
-            }"#)
+            }"#,
+            )
             .create()
     }
 
@@ -283,7 +291,8 @@ mod tests {
             .mock("GET", "/bottest_token/getUpdates")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(r#"{
+            .with_body(
+                r#"{
                 "ok": true,
                 "result": [
                     {
@@ -305,7 +314,8 @@ mod tests {
                         }
                     }
                 ]
-            }"#)
+            }"#,
+            )
             .create()
     }
 
@@ -314,10 +324,12 @@ mod tests {
             .mock("GET", "/bottest_token/getUpdates")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(r#"{
+            .with_body(
+                r#"{
                 "ok": true,
                 "result": []
-            }"#)
+            }"#,
+            )
             .create()
     }
 
@@ -326,7 +338,8 @@ mod tests {
             .mock("POST", "/bottest_token/sendMessage")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(r#"{
+            .with_body(
+                r#"{
                 "ok": true,
                 "result": {
                     "message_id": 42,
@@ -343,7 +356,8 @@ mod tests {
                     "date": 1000,
                     "text": "Test message"
                 }
-            }"#)
+            }"#,
+            )
             .create()
     }
 
@@ -352,11 +366,13 @@ mod tests {
             .mock("POST", "/bottest_token/sendMessage")
             .with_status(400)
             .with_header("content-type", "application/json")
-            .with_body(r#"{
+            .with_body(
+                r#"{
                 "ok": false,
                 "error_code": 400,
                 "description": "Bad Request: chat not found"
-            }"#)
+            }"#,
+            )
             .create()
     }
 
@@ -426,9 +442,10 @@ mod tests {
         let mut server = Server::new_async().await;
         let _mock = server
             .mock("GET", "/bottest_token/getUpdates")
-            .match_query(mockito::Matcher::AllOf(vec![
-                mockito::Matcher::UrlEncoded("offset".into(), "100".into()),
-            ]))
+            .match_query(mockito::Matcher::AllOf(vec![mockito::Matcher::UrlEncoded(
+                "offset".into(),
+                "100".into(),
+            )]))
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body(r#"{"ok": true, "result": []}"#)
@@ -444,9 +461,10 @@ mod tests {
         let mut server = Server::new_async().await;
         let _mock = server
             .mock("GET", "/bottest_token/getUpdates")
-            .match_query(mockito::Matcher::AllOf(vec![
-                mockito::Matcher::UrlEncoded("timeout".into(), "30".into()),
-            ]))
+            .match_query(mockito::Matcher::AllOf(vec![mockito::Matcher::UrlEncoded(
+                "timeout".into(),
+                "30".into(),
+            )]))
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body(r#"{"ok": true, "result": []}"#)
@@ -482,7 +500,8 @@ mod tests {
             .mock("POST", "/bottest_token/sendMessage")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(r#"{
+            .with_body(
+                r#"{
                 "ok": true,
                 "result": {
                     "message_id": 50,
@@ -492,7 +511,8 @@ mod tests {
                     "text": "Forum message",
                     "message_thread_id": 42
                 }
-            }"#)
+            }"#,
+            )
             .create();
 
         let client = create_mock_client(&server, "test_token").await;
@@ -568,7 +588,8 @@ mod tests {
             .mock("POST", "/bottest_token/sendMessage")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(r#"{
+            .with_body(
+                r#"{
                 "ok": true,
                 "result": {
                     "message_id": 1,
@@ -577,7 +598,8 @@ mod tests {
                     "date": 1000,
                     "text": ""
                 }
-            }"#)
+            }"#,
+            )
             .create();
 
         let client = create_mock_client(&server, "test_token").await;
@@ -593,16 +615,18 @@ mod tests {
             .mock("POST", "/bottest_token/sendMessage")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(format!(r#"{{
+            .with_body(format!(
+                r#"{{
                 "ok": true,
                 "result": {{
                     "message_id": 1,
                     "from": {{"id": 1, "is_bot": true, "first_name": "Bot"}},
                     "chat": {{"id": 100, "type": "private", "first_name": "User"}},
                     "date": 1000,
-                    "text": "{}"
+                    "text": "{long_text}"
                 }}
-            }}"#, long_text))
+            }}"#
+            ))
             .create();
 
         let client = create_mock_client(&server, "test_token").await;
@@ -610,4 +634,3 @@ mod tests {
         assert!(result.is_ok());
     }
 }
-

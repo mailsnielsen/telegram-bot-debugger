@@ -3,8 +3,6 @@
 //! This module provides common test helpers, mock data factories, and utilities
 //! for testing Telegram bot functionality.
 
-#![cfg(test)]
-
 use crate::telegram::{Chat, DiscoveredChat, Message, TopicInfo, Update, User};
 use std::sync::Arc;
 
@@ -94,7 +92,6 @@ pub fn create_test_message_with_thread(
     message
 }
 
-
 /// Creates a test DiscoveredChat with default values.
 ///
 /// # Arguments
@@ -148,7 +145,6 @@ pub fn create_test_topic(thread_id: i64, name: Option<String>, message_count: us
         last_seen: 1000,
     }
 }
-
 
 /// Wraps an Update in an Arc for testing scenarios that use Arc<Update>.
 #[allow(dead_code)]
@@ -229,4 +225,3 @@ pub fn mock_error_response(error_code: u16, description: &str) -> String {
         }}"#
     )
 }
-

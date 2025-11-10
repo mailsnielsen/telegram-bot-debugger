@@ -15,7 +15,7 @@ use super::models::CacheData;
 /// use telegram_bot_debugger::storage::CacheManager;
 ///
 /// let manager = CacheManager::new();
-/// 
+///
 /// // Save a bot token
 /// manager.save_token("123456:ABC-DEF".to_string())?;
 ///
@@ -62,11 +62,9 @@ impl CacheManager {
             return Ok(CacheData::default());
         }
 
-        let content = fs::read_to_string(&self.cache_path)
-            .context("Failed to read cache file")?;
+        let content = fs::read_to_string(&self.cache_path).context("Failed to read cache file")?;
 
-        let data = serde_json::from_str(&content)
-            .context("Failed to parse cache file")?;
+        let data = serde_json::from_str(&content).context("Failed to parse cache file")?;
 
         Ok(data)
     }
@@ -88,15 +86,13 @@ impl CacheManager {
     pub fn save(&self, data: &CacheData) -> Result<()> {
         // Ensure directory exists
         if let Some(parent) = self.cache_path.parent() {
-            fs::create_dir_all(parent)
-                .context("Failed to create cache directory")?;
+            fs::create_dir_all(parent).context("Failed to create cache directory")?;
         }
 
-        let content = serde_json::to_string_pretty(data)
-            .context("Failed to serialize cache data")?;
+        let content =
+            serde_json::to_string_pretty(data).context("Failed to serialize cache data")?;
 
-        fs::write(&self.cache_path, content)
-            .context("Failed to write cache file")?;
+        fs::write(&self.cache_path, content).context("Failed to write cache file")?;
 
         Ok(())
     }
@@ -142,8 +138,7 @@ impl CacheManager {
     #[allow(dead_code)]
     pub fn clear(&self) -> Result<()> {
         if self.cache_path.exists() {
-            fs::remove_file(&self.cache_path)
-                .context("Failed to remove cache file")?;
+            fs::remove_file(&self.cache_path).context("Failed to remove cache file")?;
         }
         Ok(())
     }
@@ -215,13 +210,13 @@ mod tests {
     fn test_load_corrupted_json() {
         let temp_dir = TempDir::new().unwrap();
         let cache_path = temp_dir.path().join("cache.json");
-        
+
         // Write invalid JSON
         std::fs::write(&cache_path, "not valid json{{{").unwrap();
-        
+
         let manager = CacheManager::with_path(&cache_path);
         let result = manager.load();
-        
+
         // Should return error for corrupted JSON
         assert!(result.is_err());
     }
@@ -229,26 +224,24 @@ mod tests {
     #[test]
     fn test_save_and_load_complete_cache_data() {
         use crate::storage::models::CachedChat;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let cache_path = temp_dir.path().join("cache.json");
         let manager = CacheManager::with_path(&cache_path);
 
         let data = CacheData {
             token: Some("test_token".to_string()),
-            chats: vec![
-                CachedChat {
-                    chat_id: 100,
-                    chat_type: "private".to_string(),
-                    title: None,
-                    username: Some("testuser".to_string()),
-                    first_name: Some("Test".to_string()),
-                    last_name: None,
-                    last_seen: 1000,
-                    message_count: 5,
-                    topics: vec![],
-                },
-            ],
+            chats: vec![CachedChat {
+                chat_id: 100,
+                chat_type: "private".to_string(),
+                title: None,
+                username: Some("testuser".to_string()),
+                first_name: Some("Test".to_string()),
+                last_name: None,
+                last_seen: 1000,
+                message_count: 5,
+                topics: vec![],
+            }],
             analytics: Default::default(),
         };
 
@@ -295,15 +288,14 @@ mod tests {
     #[test]
     fn test_save_preserves_existing_data() {
         use crate::storage::models::CachedChat;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let cache_path = temp_dir.path().join("cache.json");
         let manager = CacheManager::with_path(&cache_path);
 
         // Save initial data with chats
-        let mut data = CacheData::default();
-        data.chats = vec![
-            CachedChat {
+        let data = CacheData {
+            chats: vec![CachedChat {
                 chat_id: 100,
                 chat_type: "private".to_string(),
                 title: None,
@@ -313,8 +305,9 @@ mod tests {
                 last_seen: 1000,
                 message_count: 10,
                 topics: vec![],
-            },
-        ];
+            }],
+            ..Default::default()
+        };
         manager.save(&data).unwrap();
 
         // Update token using save_token (which loads, modifies, saves)
@@ -327,5 +320,3 @@ mod tests {
         assert_eq!(loaded.chats[0].chat_id, 100);
     }
 }
-
-

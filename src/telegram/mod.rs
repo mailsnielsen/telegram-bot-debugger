@@ -27,7 +27,6 @@ pub mod client;
 pub mod types;
 pub mod updates;
 
-pub use client::{TelegramClient};
+pub use client::TelegramClient;
 pub use types::*;
 pub use updates::UpdateProcessor;
-

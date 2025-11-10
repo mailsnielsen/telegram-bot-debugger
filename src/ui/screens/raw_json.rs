@@ -1,9 +1,9 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Span},
     widgets::{Block, List, ListItem, Paragraph, Wrap},
-    Frame,
 };
 use serde_json;
 
@@ -38,7 +38,8 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
 
     // Update list
     let update_items: Vec<ListItem> = app
-        .telegram.raw_updates
+        .telegram
+        .raw_updates
         .iter()
         .enumerate()
         .rev() // Show newest first
@@ -50,7 +51,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
             };
 
             let style = if i == app.ui.selected_update_index {
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::White)
             };
@@ -63,15 +66,16 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         })
         .collect();
 
-    let update_list = List::new(update_items).block(
-        Block::bordered()
-            .title("Updates (↑/↓ to navigate)"),
-    );
+    let update_list =
+        List::new(update_items).block(Block::bordered().title("Updates (↑/↓ to navigate)"));
 
     frame.render_widget(update_list, chunks[0]);
 
     // JSON details
-    if let Some(selected_update) = app.telegram.get_selected_update(app.ui.selected_update_index) {
+    if let Some(selected_update) = app
+        .telegram
+        .get_selected_update(app.ui.selected_update_index)
+    {
         let json_str = match serde_json::to_string_pretty(selected_update.as_ref()) {
             Ok(json) => json,
             Err(e) => format!("Error serializing JSON: {e}"),
@@ -88,4 +92,3 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         frame.render_widget(json_paragraph, chunks[1]);
     }
 }
-

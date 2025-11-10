@@ -3,11 +3,11 @@
 //! Handles all Telegram Bot API interactions, update processing, and chat discovery.
 
 use anyhow::Result;
-use std::sync::Arc;
 use serde_json::Value as JsonValue;
+use std::sync::Arc;
 
-use crate::telegram::{DiscoveredChat, TelegramClient, Update, UpdateProcessor};
 use super::state::TestMessageMode;
+use crate::telegram::{DiscoveredChat, TelegramClient, Update, UpdateProcessor};
 
 // Input validation constants
 const MAX_TOKEN_LENGTH: usize = 256;
@@ -60,11 +60,11 @@ impl TelegramManager {
 
     pub async fn validate_token(&mut self, token_input: &str) -> Result<TokenValidationResult> {
         let token = token_input.trim().to_string();
-        
+
         if token.is_empty() {
             return Ok(TokenValidationResult::Empty);
         }
-        
+
         if token.len() > MAX_TOKEN_LENGTH {
             return Ok(TokenValidationResult::TooLong(MAX_TOKEN_LENGTH));
         }
@@ -98,7 +98,7 @@ impl TelegramManager {
         };
 
         let text = message_input.trim();
-        
+
         // Validate message text
         if text.is_empty() {
             return Ok(SendMessageResult {
@@ -106,7 +106,7 @@ impl TelegramManager {
                 message: "✗ Error: Message cannot be empty".to_string(),
             });
         }
-        
+
         if text.len() > MAX_MESSAGE_LENGTH {
             return Ok(SendMessageResult {
                 success: false,
@@ -127,27 +127,30 @@ impl TelegramManager {
             }
             TestMessageMode::ManualChatId => {
                 let chat_id_str = chat_id_input.trim();
-                
+
                 if chat_id_str.is_empty() {
                     return Ok(SendMessageResult {
                         success: false,
                         message: "✗ Error: Chat ID cannot be empty".to_string(),
                     });
                 }
-                
+
                 if chat_id_str.len() > MAX_CHAT_ID_LENGTH {
                     return Ok(SendMessageResult {
                         success: false,
-                        message: format!("✗ Error: Chat ID too long (max {MAX_CHAT_ID_LENGTH} chars)"),
+                        message: format!(
+                            "✗ Error: Chat ID too long (max {MAX_CHAT_ID_LENGTH} chars)"
+                        ),
                     });
                 }
-                
+
                 match chat_id_str.parse::<i64>() {
                     Ok(id) => id,
                     Err(_) => {
                         return Ok(SendMessageResult {
                             success: false,
-                            message: "✗ Error: Invalid chat ID format (must be a number)".to_string(),
+                            message: "✗ Error: Invalid chat ID format (must be a number)"
+                                .to_string(),
                         });
                     }
                 }
@@ -155,14 +158,16 @@ impl TelegramManager {
         };
 
         let result = client.send_message(chat_id, text, None).await?;
-        
+
         if result.ok {
             Ok(SendMessageResult {
                 success: true,
                 message: "✓ Message sent successfully!".to_string(),
             })
         } else {
-            let error = result.description.unwrap_or_else(|| "Unknown error".to_string());
+            let error = result
+                .description
+                .unwrap_or_else(|| "Unknown error".to_string());
             Ok(SendMessageResult {
                 success: false,
                 message: format!("✗ Error: {error}"),
@@ -206,57 +211,72 @@ impl TelegramManager {
         self.raw_updates.get(index)
     }
 
-    pub fn process_updates_batch(&mut self, updates: Vec<Update>, monitor_messages: &mut Vec<super::monitoring::MonitorMessage>) {
+    pub fn process_updates_batch(
+        &mut self,
+        updates: Vec<Update>,
+        monitor_messages: &mut Vec<super::monitoring::MonitorMessage>,
+    ) {
         for update in &updates {
             if update.update_id > self.last_processed_update_id {
                 self.last_processed_update_id = update.update_id;
-                
+
                 // Store raw update for debugging (rolling buffer of 50)
                 self.raw_updates.push(Arc::new(update.clone()));
                 if self.raw_updates.len() > 50 {
                     self.raw_updates.remove(0);
                 }
-                
+
                 // Extract monitor message if applicable
                 self.extract_monitor_message(update, monitor_messages);
             }
         }
-        
+
         self.update_processor.process_updates(updates);
     }
 
-    fn extract_monitor_message(&self, update: &Update, monitor_messages: &mut Vec<super::monitoring::MonitorMessage>) {
+    fn extract_monitor_message(
+        &self,
+        update: &Update,
+        monitor_messages: &mut Vec<super::monitoring::MonitorMessage>,
+    ) {
         use chrono::Local;
-        
+
         if let Some(message) = &update.message {
             let chat_name = message.chat.display_name();
-            let sender = message.from.as_ref().map(|u| {
-                u.username.clone().unwrap_or_else(|| u.first_name.clone())
-            });
-            let text = message.text.clone().unwrap_or_else(|| "[No text]".to_string());
-            
+            let sender = message
+                .from
+                .as_ref()
+                .map(|u| u.username.clone().unwrap_or_else(|| u.first_name.clone()));
+            let text = message
+                .text
+                .clone()
+                .unwrap_or_else(|| "[No text]".to_string());
+
             monitor_messages.push(super::monitoring::MonitorMessage {
                 timestamp: Local::now().timestamp(),
                 chat_name,
                 sender,
                 text,
             });
-            
+
             // Keep only last 100 messages
             if monitor_messages.len() > 100 {
                 monitor_messages.remove(0);
             }
         } else if let Some(channel_post) = &update.channel_post {
             let chat_name = channel_post.chat.display_name();
-            let text = channel_post.text.clone().unwrap_or_else(|| "[No text]".to_string());
-            
+            let text = channel_post
+                .text
+                .clone()
+                .unwrap_or_else(|| "[No text]".to_string());
+
             monitor_messages.push(super::monitoring::MonitorMessage {
                 timestamp: Local::now().timestamp(),
                 chat_name,
                 sender: None,
                 text,
             });
-            
+
             // Keep only last 100 messages
             if monitor_messages.len() > 100 {
                 monitor_messages.remove(0);
@@ -270,4 +290,3 @@ impl Default for TelegramManager {
         Self::new()
     }
 }
-

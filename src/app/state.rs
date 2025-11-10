@@ -45,26 +45,26 @@ pub struct UiState {
     pub previous_screen: Option<Screen>,
     pub should_quit: bool,
     pub needs_render: bool,
-    
+
     // Navigation state
     pub selected_chat_index: usize,
     pub selected_message_index: usize,
     pub selected_update_index: usize,
-    
+
     // Token input screen state
     pub token_input: String,
     pub token_error: Option<String>,
-    
+
     // Test message screen state
     pub test_message_input: String,
     pub test_message_result: Option<String>,
     pub test_message_mode: TestMessageMode,
     pub manual_chat_id_input: String,
     pub test_message_input_focus: InputFocus,
-    
+
     // Analytics cache
     pub statistics: Option<Statistics>,
-    
+
     // Status messages
     pub status_message: Option<String>,
 }
@@ -94,12 +94,12 @@ impl UiState {
     pub fn quit(&mut self) {
         self.should_quit = true;
     }
-    
+
     /// Marks that the UI needs to be redrawn.
     pub fn mark_dirty(&mut self) {
         self.needs_render = true;
     }
-    
+
     /// Clears the dirty flag after rendering.
     pub fn clear_dirty(&mut self) {
         self.needs_render = false;
@@ -116,7 +116,12 @@ impl UiState {
         // Hierarchical back navigation
         let target = match self.current_screen {
             Screen::Messages => Some(Screen::Discovery),
-            Screen::Discovery | Screen::Monitor | Screen::Analytics | Screen::RawJson | Screen::TestMessage | Screen::Help => Some(Screen::Home),
+            Screen::Discovery
+            | Screen::Monitor
+            | Screen::Analytics
+            | Screen::RawJson
+            | Screen::TestMessage
+            | Screen::Help => Some(Screen::Home),
             Screen::Home => {
                 // On home, Esc quits
                 self.should_quit = true;
@@ -280,10 +285,10 @@ mod tests {
     fn test_status_message() {
         let mut state = UiState::new();
         assert!(state.status_message.is_none());
-        
+
         state.set_status("Test".to_string());
         assert_eq!(state.status_message, Some("Test".to_string()));
-        
+
         state.clear_status();
         assert!(state.status_message.is_none());
     }
@@ -291,18 +296,18 @@ mod tests {
     #[test]
     fn test_chat_navigation() {
         let mut state = UiState::new();
-        
+
         // Test with 3 chats
         state.next_chat(3);
         assert_eq!(state.selected_chat_index, 1);
-        
+
         state.next_chat(3);
         assert_eq!(state.selected_chat_index, 2);
-        
-        state.next_chat(3);  // Wrap around
+
+        state.next_chat(3); // Wrap around
         assert_eq!(state.selected_chat_index, 0);
-        
-        state.previous_chat(3);  // Wrap back
+
+        state.previous_chat(3); // Wrap back
         assert_eq!(state.selected_chat_index, 2);
     }
 
@@ -310,16 +315,16 @@ mod tests {
     #[test]
     fn test_navigation_with_zero_items() {
         let mut state = UiState::new();
-        
+
         state.next_chat(0);
         assert_eq!(state.selected_chat_index, 0);
-        
+
         state.previous_chat(0);
         assert_eq!(state.selected_chat_index, 0);
-        
+
         state.next_message(0);
         assert_eq!(state.selected_message_index, 0);
-        
+
         state.previous_message(0);
         assert_eq!(state.selected_message_index, 0);
     }
@@ -327,10 +332,10 @@ mod tests {
     #[test]
     fn test_navigation_with_single_item() {
         let mut state = UiState::new();
-        
+
         state.next_chat(1);
         assert_eq!(state.selected_chat_index, 0); // Wraps to itself
-        
+
         state.previous_chat(1);
         assert_eq!(state.selected_chat_index, 0);
     }
@@ -339,7 +344,7 @@ mod tests {
     fn test_previous_chat_wraparound_from_zero() {
         let mut state = UiState::new();
         state.selected_chat_index = 0;
-        
+
         state.previous_chat(5);
         assert_eq!(state.selected_chat_index, 4);
     }
@@ -349,7 +354,7 @@ mod tests {
         let mut state = UiState::new();
         state.set_status("Test status".to_string());
         assert!(state.status_message.is_some());
-        
+
         state.switch_screen(Screen::Discovery);
         assert!(state.status_message.is_none());
     }
@@ -358,7 +363,7 @@ mod tests {
     fn test_screen_switching_marks_dirty() {
         let mut state = UiState::new();
         state.needs_render = false;
-        
+
         state.switch_screen(Screen::Analytics);
         assert!(state.needs_render);
     }
@@ -367,7 +372,7 @@ mod tests {
     fn test_set_status_marks_dirty() {
         let mut state = UiState::new();
         state.needs_render = false;
-        
+
         state.set_status("Test".to_string());
         assert!(state.needs_render);
     }
@@ -375,11 +380,11 @@ mod tests {
     #[test]
     fn test_mark_dirty_and_clear_dirty() {
         let mut state = UiState::new();
-        
+
         state.needs_render = false;
         state.mark_dirty();
         assert!(state.needs_render);
-        
+
         state.clear_dirty();
         assert!(!state.needs_render);
     }
@@ -389,11 +394,11 @@ mod tests {
         let mut state = UiState::new();
         assert_eq!(state.test_message_mode, TestMessageMode::SelectedChat);
         assert_eq!(state.test_message_input_focus, InputFocus::MessageText);
-        
+
         state.toggle_test_message_mode();
         assert_eq!(state.test_message_mode, TestMessageMode::ManualChatId);
         assert_eq!(state.test_message_input_focus, InputFocus::ChatId); // Focus reset to ChatId
-        
+
         state.toggle_test_message_mode();
         assert_eq!(state.test_message_mode, TestMessageMode::SelectedChat);
         assert_eq!(state.test_message_input_focus, InputFocus::MessageText); // Focus back to MessageText
@@ -404,10 +409,10 @@ mod tests {
         let mut state = UiState::new();
         state.test_message_mode = TestMessageMode::ManualChatId;
         state.test_message_input_focus = InputFocus::ChatId;
-        
+
         state.toggle_input_focus();
         assert_eq!(state.test_message_input_focus, InputFocus::MessageText);
-        
+
         state.toggle_input_focus();
         assert_eq!(state.test_message_input_focus, InputFocus::ChatId);
     }
@@ -421,4 +426,3 @@ mod tests {
         assert_eq!(state.selected_chat_index, 0);
     }
 }
-

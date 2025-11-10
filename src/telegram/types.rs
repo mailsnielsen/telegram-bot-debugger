@@ -107,7 +107,7 @@ pub struct Message {
     pub text: Option<String>,
     pub message_thread_id: Option<i64>,
     pub reply_to_message: Option<Box<Message>>,
-    
+
     // Capture all other fields from the API that we don't explicitly handle
     #[serde(flatten)]
     pub other: std::collections::HashMap<String, serde_json::Value>,
@@ -122,7 +122,7 @@ pub struct ChannelPost {
     pub chat: Chat,
     pub date: i64,
     pub text: Option<String>,
-    
+
     // Capture all other fields from the API
     #[serde(flatten)]
     pub other: std::collections::HashMap<String, serde_json::Value>,
@@ -146,7 +146,7 @@ pub struct Update {
     pub message: Option<Message>,
     pub channel_post: Option<ChannelPost>,
     pub edited_message: Option<Message>,
-    
+
     // Capture all other fields from the API (e.g., callback_query, inline_query, etc.)
     #[serde(flatten)]
     pub other: std::collections::HashMap<String, serde_json::Value>,
@@ -222,7 +222,7 @@ impl Update {
         if self.channel_post.is_some() {
             return "channel_post".to_string();
         }
-        
+
         // Check for other known update types in the `other` HashMap
         // These are flattened fields from the API that we don't explicitly handle
         let known_types = [
@@ -247,18 +247,18 @@ impl Update {
             "chat_boost",
             "removed_chat_boost",
         ];
-        
+
         for type_name in &known_types {
             if self.other.contains_key(*type_name) {
                 return type_name.to_string();
             }
         }
-        
+
         // If we have any other field, return it as "other_{field_name}"
         if let Some((key, _)) = self.other.iter().next() {
-            return format!("other_{}", key);
+            return format!("other_{key}");
         }
-        
+
         // Fallback for completely empty updates
         "unknown".to_string()
     }
@@ -528,14 +528,12 @@ mod tests {
             },
             last_seen: 1234567890,
             message_count: 42,
-            topics: vec![
-                TopicInfo {
-                    thread_id: 1,
-                    name: Some("General".to_string()),
-                    message_count: 10,
-                    last_seen: 1000,
-                },
-            ],
+            topics: vec![TopicInfo {
+                thread_id: 1,
+                name: Some("General".to_string()),
+                message_count: 10,
+                last_seen: 1000,
+            }],
         };
 
         let json = serde_json::to_string(&discovered_chat).unwrap();
@@ -774,7 +772,7 @@ mod tests {
         let response: GetMeResponse = serde_json::from_str(json).unwrap();
         assert!(response.ok);
         assert!(response.result.is_some());
-        
+
         let user = response.result.unwrap();
         assert_eq!(user.id, 123456);
         assert!(user.is_bot);

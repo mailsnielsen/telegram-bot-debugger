@@ -1,9 +1,9 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, List, ListItem, Paragraph},
-    Frame,
 };
 
 use crate::app::App;
@@ -29,11 +29,8 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         return;
     }
 
-    let [list_area, details_area] = Layout::horizontal([
-        Constraint::Percentage(50),
-        Constraint::Percentage(50),
-    ])
-    .areas(area);
+    let [list_area, details_area] =
+        Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)]).areas(area);
 
     // Chat list
     let chat_items: Vec<ListItem> = chats
@@ -70,8 +67,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         })
         .collect();
 
-    let chat_list = List::new(chat_items)
-        .block(Block::bordered().title("Chats (↑/↓ to navigate | Enter to view messages | e to export)"));
+    let chat_list = List::new(chat_items).block(
+        Block::bordered().title("Chats (↑/↓ to navigate | Enter to view messages | e to export)"),
+    );
 
     frame.render_widget(chat_list, list_area);
 
@@ -81,7 +79,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
             Line::from(""),
             Line::from(Span::styled(
                 "Chat Details:",
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
             )),
             Line::from(""),
             Line::from(format!("Chat ID: {}", selected_chat.chat.id)),
@@ -107,10 +107,16 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         details.push(Line::from(""));
         details.push(Line::from(Span::styled(
             "Statistics:",
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         )));
-        details.push(Line::from(format!("Messages Seen: {}", selected_chat.message_count)));
-        details.push(Line::from(format!("Last Activity: {}", 
+        details.push(Line::from(format!(
+            "Messages Seen: {}",
+            selected_chat.message_count
+        )));
+        details.push(Line::from(format!(
+            "Last Activity: {}",
             chrono::DateTime::from_timestamp(selected_chat.last_seen, 0)
                 .map(|dt| dt.format("%Y-%m-%d %H:%M:%S").to_string())
                 .unwrap_or_else(|| "Unknown".to_string())
@@ -120,7 +126,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
             details.push(Line::from(""));
             details.push(Line::from(Span::styled(
                 "Topics (Forum Threads):",
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
             )));
             for topic in &selected_chat.topics {
                 let topic_name = topic.name.as_deref().unwrap_or("Unknown Topic");
@@ -146,4 +154,3 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         frame.render_widget(details_paragraph, details_area);
     }
 }
-

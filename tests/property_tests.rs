@@ -21,14 +21,14 @@ proptest! {
     fn prop_previous_chat_stays_in_bounds(chat_count in 1usize..100, start_index in 0usize..100) {
         let start_index = start_index % chat_count; // Ensure valid start
         let mut index = start_index;
-        
+
         // Simulate previous_chat logic
         if index == 0 {
             index = chat_count - 1;
         } else {
             index -= 1;
         }
-        
+
         prop_assert!(index < chat_count);
     }
 }
@@ -94,7 +94,7 @@ proptest! {
         message_counts in prop::collection::vec(0usize..1000, 1..20)
     ) {
         use telegram_bot_debugger::analytics::Statistics;
-        
+
         let chats: Vec<DiscoveredChat> = message_counts.iter().enumerate().map(|(i, &count)| {
             DiscoveredChat {
                 chat: Chat {
@@ -102,7 +102,7 @@ proptest! {
                     chat_type: "private".to_string(),
                     title: None,
                     username: None,
-                    first_name: Some(format!("User{}", i)),
+                    first_name: Some(format!("User{i}")),
                     last_name: None,
                 },
                 last_seen: 1000,
@@ -127,7 +127,7 @@ proptest! {
         update_ids in prop::collection::vec(0i64..1000, 1..50)
     ) {
         let mut processor = UpdateProcessor::new();
-        
+
         let updates: Vec<Update> = update_ids.iter().map(|&id| {
             Update {
                 update_id: id,
@@ -155,7 +155,7 @@ proptest! {
         }).collect();
 
         processor.process_updates(updates);
-        
+
         let chats = processor.get_discovered_chats();
         // Verify we discovered exactly one chat and it has the correct number of messages
         prop_assert_eq!(chats.len(), 1);
@@ -209,7 +209,7 @@ proptest! {
         timestamps in prop::collection::vec(0i64..1000000, 1..20)
     ) {
         let mut processor = UpdateProcessor::new();
-        
+
         let updates: Vec<Update> = timestamps.iter().enumerate().map(|(i, &ts)| {
             Update {
                 update_id: i as i64,
@@ -221,7 +221,7 @@ proptest! {
                         chat_type: "private".to_string(),
                         title: None,
                         username: None,
-                        first_name: Some(format!("User{}", i)),
+                        first_name: Some(format!("User{i}")),
                         last_name: None,
                     },
                     date: ts,
@@ -237,13 +237,12 @@ proptest! {
         }).collect();
 
         processor.process_updates(updates);
-        
+
         let chats = processor.get_discovered_chats();
-        
+
         // Verify chats are sorted by last_seen descending
         for i in 1..chats.len() {
             prop_assert!(chats[i-1].last_seen >= chats[i].last_seen);
         }
     }
 }
-

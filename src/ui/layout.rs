@@ -1,18 +1,18 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Span},
     widgets::{Block, Paragraph},
-    Frame,
 };
 
 use crate::app::{App, Screen};
 
 pub fn render_frame(frame: &mut Frame, app: &App) {
     let [title_area, content_area, status_area] = Layout::vertical([
-        Constraint::Length(3),  // Title bar
-        Constraint::Min(0),     // Content
-        Constraint::Length(3),  // Status bar
+        Constraint::Length(3), // Title bar
+        Constraint::Min(0),    // Content
+        Constraint::Length(3), // Status bar
     ])
     .areas(frame.area());
 
@@ -59,17 +59,11 @@ fn render_title_bar(frame: &mut Frame, area: Rect, app: &App) {
 
 fn render_status_bar(frame: &mut Frame, area: Rect, app: &App) {
     let monitoring_indicator = if app.monitoring.is_active() {
-        vec![
-            "● ".green().bold(),
-            "Monitor: ON".green(),
-        ]
+        vec!["● ".green().bold(), "Monitor: ON".green()]
     } else {
-        vec![
-            "● ".red().bold(),
-            "Monitor: OFF".dark_gray(),
-        ]
+        vec!["● ".red().bold(), "Monitor: OFF".dark_gray()]
     };
-    
+
     let mut status_text = monitoring_indicator;
     status_text.push(" | ".into());
     status_text.push("Esc".yellow().bold());
@@ -88,8 +82,7 @@ fn render_status_bar(frame: &mut Frame, area: Rect, app: &App) {
         status_text.push(Span::from(status_msg.as_str()).green());
     }
 
-    let status_paragraph = Paragraph::new(Line::from(status_text))
-        .block(Block::bordered());
+    let status_paragraph = Paragraph::new(Line::from(status_text)).block(Block::bordered());
 
     frame.render_widget(status_paragraph, area);
 }
@@ -99,7 +92,9 @@ fn render_help_screen(frame: &mut Frame, area: Rect) {
         Line::from(""),
         Line::from(Span::styled(
             "Keyboard Shortcuts:",
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(vec![
@@ -117,7 +112,9 @@ fn render_help_screen(frame: &mut Frame, area: Rect) {
         Line::from(""),
         Line::from(Span::styled(
             "Main Navigation:",
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(" 1 - Discovery (chats, topics, view messages)"),
@@ -126,13 +123,20 @@ fn render_help_screen(frame: &mut Frame, area: Rect) {
         Line::from(" 4 - Raw JSON Debug (API responses)"),
         Line::from(""),
         Line::from(vec![
-            Span::styled("F5", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "F5",
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(" - Toggle monitoring (works in background)"),
         ]),
         Line::from(""),
         Line::from(Span::styled(
             "Discovery Screen:",
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(vec![
@@ -150,7 +154,9 @@ fn render_help_screen(frame: &mut Frame, area: Rect) {
         Line::from(""),
         Line::from(Span::styled(
             "Messages Screen:",
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(vec![
@@ -168,7 +174,9 @@ fn render_help_screen(frame: &mut Frame, area: Rect) {
         Line::from(""),
         Line::from(Span::styled(
             "Test Message:",
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(vec![
@@ -182,9 +190,7 @@ fn render_help_screen(frame: &mut Frame, area: Rect) {
         Line::from(""),
     ];
 
-    let paragraph = Paragraph::new(help_text)
-        .block(Block::bordered().title("Help"));
+    let paragraph = Paragraph::new(help_text).block(Block::bordered().title("Help"));
 
     frame.render_widget(paragraph, area);
 }
-

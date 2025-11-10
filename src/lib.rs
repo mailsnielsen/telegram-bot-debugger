@@ -15,6 +15,5 @@ mod test_utils;
 
 // Re-export commonly used types
 pub use app::{App, Screen};
-pub use telegram::{TelegramClient, UpdateProcessor};
 pub use storage::CacheManager;
-
+pub use telegram::{TelegramClient, UpdateProcessor};

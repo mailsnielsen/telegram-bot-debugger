@@ -30,19 +30,19 @@ pub enum MonitoringCommand {
 pub struct MonitoringService {
     /// Whether monitoring is currently active
     active: bool,
-    
+
     /// Whether new messages should be added to the monitor display
     pub paused: bool,
-    
+
     /// Messages displayed in the monitor screen
     pub messages: Vec<MonitorMessage>,
-    
+
     /// Background task handle
     task_handle: Option<JoinHandle<()>>,
-    
+
     /// Channel for receiving updates from the background task
     update_receiver: Option<mpsc::Receiver<Vec<Update>>>,
-    
+
     /// Channel for sending control commands to the background task
     control_sender: Option<mpsc::Sender<MonitoringCommand>>,
 }
@@ -75,7 +75,7 @@ impl MonitoringService {
 
         let (update_tx, update_rx) = mpsc::channel::<Vec<Update>>(100);
         let (control_tx, mut control_rx) = mpsc::channel::<MonitoringCommand>(10);
-        
+
         let mut current_update_id = last_update_id;
 
         let handle = tokio::spawn(async move {
@@ -98,7 +98,7 @@ impl MonitoringService {
                                     current_update_id = update.update_id;
                                 }
                             }
-                            
+
                             // Send updates to main app
                             if update_tx.send(response.result).await.is_err() {
                                 break; // Channel closed, stop task
@@ -166,4 +166,3 @@ impl Default for MonitoringService {
         Self::new()
     }
 }
-

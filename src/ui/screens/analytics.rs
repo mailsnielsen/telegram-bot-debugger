@@ -1,9 +1,9 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, List, ListItem, Paragraph},
-    Frame,
 };
 
 use crate::app::App;
@@ -18,10 +18,7 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(8),
-            Constraint::Min(0),
-        ])
+        .constraints([Constraint::Length(8), Constraint::Min(0)])
         .split(area);
 
     // Overview
@@ -29,7 +26,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         Line::from(""),
         Line::from(Span::styled(
             "📊 Statistics Overview",
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(format!("Total Chats: {}", stats.total_chats)),
@@ -38,8 +37,7 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         Line::from(""),
     ];
 
-    let overview = Paragraph::new(overview_text)
-        .block(Block::bordered().title("Analytics"));
+    let overview = Paragraph::new(overview_text).block(Block::bordered().title("Analytics"));
 
     frame.render_widget(overview, chunks[0]);
 
@@ -56,7 +54,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
     // Top chats
     let mut top_chats_items = vec![ListItem::new(Line::from(Span::styled(
         "Most Active Chats:",
-        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD),
     )))];
 
     for (i, (chat_name, count)) in stats.get_top_chats(10).iter().enumerate() {
@@ -68,15 +68,16 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         ))));
     }
 
-    let top_chats = List::new(top_chats_items)
-        .block(Block::bordered().title("Top Chats"));
+    let top_chats = List::new(top_chats_items).block(Block::bordered().title("Top Chats"));
 
     frame.render_widget(top_chats, bottom_chunks[0]);
 
     // Chat type distribution
     let mut type_items = vec![ListItem::new(Line::from(Span::styled(
         "Chat Types:",
-        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD),
     )))];
 
     for (chat_type, count) in &stats.chat_type_distribution {
@@ -93,15 +94,16 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         ])));
     }
 
-    let type_list = List::new(type_items)
-        .block(Block::bordered().title("Types"));
+    let type_list = List::new(type_items).block(Block::bordered().title("Types"));
 
     frame.render_widget(type_list, bottom_chunks[1]);
 
     // Hourly distribution
     let mut hourly_items = vec![ListItem::new(Line::from(Span::styled(
         "Activity by Hour:",
-        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD),
     )))];
 
     // Show only hours with activity
@@ -122,9 +124,7 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         }
     }
 
-    let hourly_list = List::new(hourly_items)
-        .block(Block::bordered().title("Hourly"));
+    let hourly_list = List::new(hourly_items).block(Block::bordered().title("Hourly"));
 
     frame.render_widget(hourly_list, bottom_chunks[2]);
 }
-

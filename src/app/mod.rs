@@ -38,7 +38,7 @@ impl App {
     pub fn new() -> Result<Self> {
         let cache_manager = CacheManager::new();
         let token = cache_manager.load_token()?;
-        
+
         let (telegram, initial_screen) = if let Some(token) = token {
             (TelegramManager::new_with_token(token), Screen::Home)
         } else {
@@ -60,18 +60,18 @@ impl App {
     pub fn quit(&mut self) {
         self.ui.quit();
     }
-    
+
     pub fn mark_dirty(&mut self) {
         self.ui.mark_dirty();
     }
-    
+
     pub fn clear_dirty(&mut self) {
         self.ui.clear_dirty();
     }
 
     pub fn switch_screen(&mut self, screen: Screen) {
         self.ui.switch_screen(screen);
-        
+
         // Precompute analytics when switching to analytics screen
         if screen == Screen::Analytics {
             let chats = self.telegram.get_discovered_chats();
@@ -128,20 +128,22 @@ impl App {
         chats.get(self.ui.selected_chat_index).copied()
     }
 
-    pub fn get_selected_message_for_current_chat(&self) -> Option<&std::sync::Arc<crate::telegram::Update>> {
+    pub fn get_selected_message_for_current_chat(
+        &self,
+    ) -> Option<&std::sync::Arc<crate::telegram::Update>> {
         self.telegram.get_selected_message_for_chat(
             self.get_selected_chat().map(|c| c.chat.id),
             self.ui.selected_message_index,
         )
     }
 
-
     pub async fn validate_and_save_token(&mut self) -> Result<()> {
         let validation_result = self.telegram.validate_token(&self.ui.token_input).await?;
-        
+
         match validation_result {
             telegram_manager::TokenValidationResult::Valid(client) => {
-                self.cache_manager.save_token(client.get_token().to_string())?;
+                self.cache_manager
+                    .save_token(client.get_token().to_string())?;
                 self.ui.token_error = None;
                 self.switch_screen(Screen::Home);
                 self.set_status("Token validated successfully!".to_string());
@@ -164,19 +166,22 @@ impl App {
     }
 
     pub async fn send_test_message(&mut self) -> Result<()> {
-        let result = self.telegram.send_test_message(
-            &self.ui.test_message_input,
-            &self.ui.manual_chat_id_input,
-            self.ui.test_message_mode,
-            self.get_selected_chat(),
-        ).await?;
-        
+        let result = self
+            .telegram
+            .send_test_message(
+                &self.ui.test_message_input,
+                &self.ui.manual_chat_id_input,
+                self.ui.test_message_mode,
+                self.get_selected_chat(),
+            )
+            .await?;
+
         self.ui.test_message_result = Some(result.message);
         if result.success {
             self.ui.test_message_input.clear();
         }
         self.ui.mark_dirty();
-        
+
         Ok(())
     }
 
@@ -203,7 +208,9 @@ impl App {
     }
 
     pub fn export_selected_update(&mut self) -> Result<()> {
-        let update_option = self.telegram.get_selected_update(self.ui.selected_update_index);
+        let update_option = self
+            .telegram
+            .get_selected_update(self.ui.selected_update_index);
         self.export_selected_generic(
             update_option.map(|arc| arc.as_ref().clone()),
             |update| format!("update_{}", update.update_id),
@@ -251,7 +258,7 @@ impl App {
         if let Some(client) = &self.telegram.client {
             let last_update_id = self.telegram.last_processed_update_id;
             self.monitoring.toggle(client.clone(), last_update_id).await;
-            
+
             let status = if self.monitoring.is_active() {
                 "Monitoring started"
             } else {
@@ -289,7 +296,8 @@ impl App {
                     // Still process for update tracking, but don't add to monitor messages
                     self.telegram.update_processor.process_updates(updates);
                 } else {
-                    self.telegram.process_updates_batch(updates, &mut self.monitoring.messages);
+                    self.telegram
+                        .process_updates_batch(updates, &mut self.monitoring.messages);
                 }
             }
             self.ui.mark_dirty();
@@ -302,4 +310,3 @@ impl Default for App {
         Self::new().unwrap()
     }
 }
-

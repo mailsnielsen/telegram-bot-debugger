@@ -1,9 +1,9 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::Line,
     widgets::{Block, Paragraph},
-    Frame,
 };
 
 use crate::app::App;
@@ -49,9 +49,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
             .block(Block::bordered().title("Error"));
         frame.render_widget(error_paragraph, chunks[2]);
     } else {
-        let help = Paragraph::new("Press Enter to validate token | Type to input | Backspace to delete")
-            .block(Block::bordered().title("Help"));
+        let help =
+            Paragraph::new("Press Enter to validate token | Type to input | Backspace to delete")
+                .block(Block::bordered().title("Help"));
         frame.render_widget(help, chunks[2]);
     }
 }
-

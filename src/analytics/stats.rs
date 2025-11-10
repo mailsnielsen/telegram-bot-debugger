@@ -108,7 +108,9 @@ impl Statistics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::{create_test_discovered_chat, create_test_discovered_chat_with_topics, create_test_topic};
+    use crate::test_utils::{
+        create_test_discovered_chat, create_test_discovered_chat_with_topics, create_test_topic,
+    };
 
     #[test]
     fn test_statistics_from_empty_chats() {
@@ -160,7 +162,7 @@ mod tests {
         assert_eq!(stats.messages_per_chat.len(), 3);
         assert!(stats.messages_per_chat[0].1 >= stats.messages_per_chat[1].1);
         assert!(stats.messages_per_chat[1].1 >= stats.messages_per_chat[2].1);
-        
+
         // Highest should be 20
         assert_eq!(stats.messages_per_chat[0].1, 20);
     }
@@ -170,7 +172,7 @@ mod tests {
         // Create chat with specific last_seen to test hour extraction
         let mut chat1 = create_test_discovered_chat(100, "private", 10);
         chat1.last_seen = 1609459200; // 2021-01-01 00:00:00 UTC (hour 0)
-        
+
         let mut chat2 = create_test_discovered_chat(200, "group", 20);
         chat2.last_seen = 1609462800; // 2021-01-01 01:00:00 UTC (hour 1)
 
@@ -179,10 +181,10 @@ mod tests {
 
         // Should have entries for the hours when messages were seen
         assert!(!stats.hourly_distribution.is_empty());
-        
+
         // Distribution should be sorted by hour
         for i in 1..stats.hourly_distribution.len() {
-            assert!(stats.hourly_distribution[i-1].0 <= stats.hourly_distribution[i].0);
+            assert!(stats.hourly_distribution[i - 1].0 <= stats.hourly_distribution[i].0);
         }
     }
 
@@ -212,9 +214,7 @@ mod tests {
         ];
         let chat1 = create_test_discovered_chat_with_topics(100, topics1);
 
-        let topics2 = vec![
-            create_test_topic(3, Some("Topic 3".to_string()), 7),
-        ];
+        let topics2 = vec![create_test_topic(3, Some("Topic 3".to_string()), 7)];
         let chat2 = create_test_discovered_chat_with_topics(200, topics2);
 
         let chats = vec![&chat1, &chat2];
@@ -294,7 +294,7 @@ mod tests {
     fn test_statistics_preserves_chat_names() {
         let mut chat1 = create_test_discovered_chat(100, "private", 5);
         chat1.chat.first_name = Some("Alice".to_string());
-        
+
         let mut chat2 = create_test_discovered_chat(200, "group", 10);
         chat2.chat.title = Some("My Group".to_string());
 
@@ -302,7 +302,11 @@ mod tests {
         let stats = Statistics::from_chats(&chats);
 
         // Check that display names are present
-        let names: Vec<&String> = stats.messages_per_chat.iter().map(|(name, _)| name).collect();
+        let names: Vec<&String> = stats
+            .messages_per_chat
+            .iter()
+            .map(|(name, _)| name)
+            .collect();
         assert!(names.contains(&&"Alice".to_string()) || names.contains(&&"My Group".to_string()));
     }
 
@@ -311,7 +315,7 @@ mod tests {
         // Create multiple chats with messages at same hour
         let mut chat1 = create_test_discovered_chat(100, "private", 10);
         chat1.last_seen = 1609459200; // hour 0
-        
+
         let mut chat2 = create_test_discovered_chat(200, "group", 20);
         chat2.last_seen = 1609459200; // same hour 0
 
@@ -350,10 +354,7 @@ mod tests {
 
     #[test]
     fn test_statistics_with_topics_no_messages() {
-        let topics = vec![
-            create_test_topic(1, None, 0),
-            create_test_topic(2, None, 0),
-        ];
+        let topics = vec![create_test_topic(1, None, 0), create_test_topic(2, None, 0)];
         let chat = create_test_discovered_chat_with_topics(100, topics);
         let chats = vec![&chat];
         let stats = Statistics::from_chats(&chats);
@@ -376,4 +377,3 @@ mod tests {
         assert_eq!(total_from_list, stats.total_messages);
     }
 }
-
