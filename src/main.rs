@@ -61,13 +61,13 @@ async fn run_app<B: ratatui::backend::Backend>(
 
         // Event polling with longer timeout to reduce CPU usage
         // 250ms is responsive enough for user input while being CPU-friendly
-        if event::poll(Duration::from_millis(250))? && let Event::Key(key) = event::read()? {
+        if event::poll(Duration::from_millis(250))?
+            && let Event::Key(key) = event::read()?
+        {
             // Two-phase handling: Screen-specific first, then global fallback
             let handled = match app.ui.current_screen {
                 Screen::TokenInput => handle_token_input(app, key.code).await?,
-                Screen::TestMessage => {
-                    handle_test_message(app, key.code, key.modifiers).await?
-                }
+                Screen::TestMessage => handle_test_message(app, key.code, key.modifiers).await?,
                 Screen::Monitor => handle_monitor(app, key.code).await?,
                 Screen::Discovery => handle_discovery(app, key.code, key.modifiers).await?,
                 Screen::Messages => handle_messages(app, key.code, key.modifiers).await?,
