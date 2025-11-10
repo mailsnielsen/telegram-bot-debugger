@@ -74,15 +74,26 @@ jobs:
       - name: Create tarball (Linux and macOS)
         if: matrix.os != 'windows-latest'
         run: |
-          cd target/${{ matrix.target }}/release
-          tar czf ${{ matrix.asset_name }}.tar.gz ${{ matrix.artifact_name }}
-          mv ${{ matrix.asset_name }}.tar.gz ../../../
+          mkdir -p release-files
+          cp target/${{ matrix.target }}/release/${{ matrix.artifact_name }} release-files/
+          cp LICENSE release-files/
+          cp README.md release-files/
+          cd release-files
+          tar czf ../${{ matrix.asset_name }}.tar.gz *
+          cd ..
+          sha256sum ${{ matrix.asset_name }}.tar.gz > ${{ matrix.asset_name }}.tar.gz.sha256
 
       - name: Create zip (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          cd target/${{ matrix.target }}/release
-          7z a ../../../${{ matrix.asset_name }}.zip ${{ matrix.artifact_name }}
+          mkdir release-files
+          cp target/${{ matrix.target }}/release/${{ matrix.artifact_name }} release-files/
+          cp LICENSE release-files/
+          cp README.md release-files/
+          cd release-files
+          7z a ../${{ matrix.asset_name }}.zip *
+          cd ..
+          Get-FileHash -Algorithm SHA256 ${{ matrix.asset_name }}.zip | ForEach-Object { "$($_.Hash.ToLower())  ${{ matrix.asset_name }}.zip" } | Out-File -FilePath ${{ matrix.asset_name }}.zip.sha256 -Encoding ASCII
 
       - name: Upload Release Asset (Linux/macOS)
         if: matrix.os != 'windows-latest'
@@ -95,6 +106,17 @@ jobs:
           asset_name: ${{ matrix.asset_name }}.tar.gz
           asset_content_type: application/gzip
 
+      - name: Upload SHA256 checksum (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./${{ matrix.asset_name }}.tar.gz.sha256
+          asset_name: ${{ matrix.asset_name }}.tar.gz.sha256
+          asset_content_type: text/plain
+
       - name: Upload Release Asset (Windows)
         if: matrix.os == 'windows-latest'
         uses: actions/upload-release-asset@v1
@@ -105,4 +127,15 @@ jobs:
           asset_path: ./${{ matrix.asset_name }}.zip
           asset_name: ${{ matrix.asset_name }}.zip
           asset_content_type: application/zip
+
+      - name: Upload SHA256 checksum (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./${{ matrix.asset_name }}.zip.sha256
+          asset_name: ${{ matrix.asset_name }}.zip.sha256
+          asset_content_type: text/plain
 
