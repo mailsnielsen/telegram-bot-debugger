@@ -1,6 +1,6 @@
 [package]
 name = "telegram-bot-debugger"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2024"
 
 [lib]
@@ -26,5 +26,5 @@ tokio = { version = "1.48.0", features = ["full"] }
 assert_matches = "1.5.0"
 mockito = "1.7.0"
 proptest = "1.9.0"
-tempfile = "3.14"
+tempfile = "3.23"
 tokio-test = "0.4.4"
