@@ -1,0 +1,28 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# Config and cache
+/config/cache.json
+/config/*.json
+*.toml.bak
+
+# Exports
+/exports/
+
+# IDE
+.ai/
+.idea/
+.cursor/
+.vscode/
+.history/
+*.swp
+*.swo
+*~
+
+
+# OS
+.DS_Store
+Thumbs.db

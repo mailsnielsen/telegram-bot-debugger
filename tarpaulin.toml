@@ -1,0 +1,47 @@
+[report]
+# Output formats for coverage reports
+out = ["Xml", "Html", "Lcov"]
+
+# Minimum coverage threshold (80%)
+fail-under = 80.0
+
+[run]
+# Timeout for individual tests (in seconds)
+timeout = 300
+
+# Run tests with all features enabled
+all-features = true
+
+# Exclude UI rendering code and main from coverage requirements
+exclude = [
+    "src/main.rs",
+    "src/ui/layout.rs",
+    "src/ui/screens/*",
+]
+
+# Include doc tests in coverage
+run-types = ["Tests", "Doctests"]
+
+# Follow dependencies
+follow-exec = false
+
+# Count hits rather than just covered/uncovered
+count = true
+
+# Exclude files matching these patterns
+exclude-files = [
+    "*/tests/*",
+    "*/test_utils.rs",
+]
+
+[output]
+# Generate HTML report in this directory
+dir = "target/coverage"
+
+# Don't fail if coverage is below threshold (just warn)
+ignore-panics = true
+
+[advanced]
+# Use rustc's native coverage instrumentation
+engine = "llvm"
+
