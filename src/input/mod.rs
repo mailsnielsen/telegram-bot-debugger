@@ -63,12 +63,49 @@ pub async fn try_handle_global_keys(
             app.switch_screen(Screen::RawJson);
             Ok(KeyAction::Handled)
         }
+        KeyCode::Char('5') => {
+            app.switch_screen(Screen::WebhookManagement);
+            Ok(KeyAction::Handled)
+        }
         KeyCode::Char('m') | KeyCode::Char('M') => {
             app.switch_screen(Screen::TestMessage);
             Ok(KeyAction::Handled)
         }
         KeyCode::F(5) => {
             app.toggle_monitoring().await;
+            Ok(KeyAction::Handled)
+        }
+        _ => Ok(KeyAction::NotHandled),
+    }
+}
+
+/// Handles Webhook Management screen-specific keys.
+///
+/// Returns `KeyAction::Handled` if processed, otherwise `KeyAction::NotHandled`.
+pub async fn try_handle_webhook_keys(app: &mut App, key: KeyCode) -> Result<KeyAction> {
+    if app.ui.current_screen != Screen::WebhookManagement {
+        return Ok(KeyAction::NotHandled);
+    }
+
+    match key {
+        KeyCode::Char('i') | KeyCode::Char('I') => {
+            app.get_webhook_info().await?;
+            Ok(KeyAction::Handled)
+        }
+        KeyCode::Char('d') | KeyCode::Char('D') => {
+            app.delete_webhook().await?;
+            Ok(KeyAction::Handled)
+        }
+        KeyCode::Enter => {
+            app.set_webhook().await?;
+            Ok(KeyAction::Handled)
+        }
+        KeyCode::Backspace => {
+            app.webhook_url_backspace();
+            Ok(KeyAction::Handled)
+        }
+        KeyCode::Char(c) => {
+            app.webhook_url_input(c);
             Ok(KeyAction::Handled)
         }
         _ => Ok(KeyAction::NotHandled),

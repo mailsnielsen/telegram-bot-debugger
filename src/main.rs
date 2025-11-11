@@ -10,7 +10,9 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use telegram_bot_debugger::app::{App, Screen};
-use telegram_bot_debugger::input::{KeyAction, try_handle_global_keys, try_handle_raw_json_keys};
+use telegram_bot_debugger::input::{
+    KeyAction, try_handle_global_keys, try_handle_raw_json_keys, try_handle_webhook_keys,
+};
 use telegram_bot_debugger::ui::render_frame;
 
 #[tokio::main]
@@ -81,6 +83,9 @@ async fn run_app<B: ratatui::backend::Backend>(
 
             // Try RawJson-specific keys if applicable
             try_handle_raw_json_keys(app, key.code)?;
+
+            // Try Webhook Management-specific keys if applicable
+            try_handle_webhook_keys(app, key.code).await?;
 
             // Mark for re-render after input processing
             app.mark_dirty();

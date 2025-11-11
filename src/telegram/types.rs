@@ -271,6 +271,76 @@ pub struct GetMeResponse {
     pub result: Option<User>,
 }
 
+/// Contains information about the current status of a webhook.
+///
+/// # Fields
+///
+/// * `url` - Webhook URL, may be empty if webhook is not set up
+/// * `has_custom_certificate` - True, if a custom certificate was provided for webhook certificate checks
+/// * `pending_update_count` - Number of updates awaiting delivery
+/// * `ip_address` - Optional currently used webhook IP address
+/// * `last_error_date` - Optional Unix time for the most recent error that happened when trying to deliver an update via webhook
+/// * `last_error_message` - Optional error message in human-readable format for the most recent error
+/// * `last_synchronization_error_date` - Optional Unix time of the most recent error that happened when trying to synchronize available updates with Telegram datacenters
+/// * `max_connections` - Optional maximum allowed number of simultaneous HTTPS connections to the webhook for update delivery
+/// * `allowed_updates` - Optional list of update types the bot is subscribed to
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WebhookInfo {
+    pub url: String,
+    pub has_custom_certificate: bool,
+    pub pending_update_count: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ip_address: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_error_date: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_error_message: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_synchronization_error_date: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_connections: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allowed_updates: Option<Vec<String>>,
+}
+
+/// Response from the `getWebhookInfo` API method.
+///
+/// # Fields
+///
+/// * `ok` - True if the request was successful
+/// * `result` - Optional webhook information
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetWebhookInfoResponse {
+    pub ok: bool,
+    pub result: Option<WebhookInfo>,
+}
+
+/// Response from the `setWebhook` API method.
+///
+/// # Fields
+///
+/// * `ok` - True if the request was successful
+/// * `description` - Optional error description if the request failed
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SetWebhookResponse {
+    pub ok: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+/// Response from the `deleteWebhook` API method.
+///
+/// # Fields
+///
+/// * `ok` - True if the request was successful
+/// * `description` - Optional error description if the request failed
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DeleteWebhookResponse {
+    pub ok: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
 /// Represents a discovered chat with aggregated statistics.
 ///
 /// This is used by the application to track chats that the bot has interacted with,

@@ -29,6 +29,9 @@ pub fn render_frame(frame: &mut Frame, app: &App) {
         Screen::Monitor => super::screens::monitor::render(frame, content_area, app),
         Screen::Analytics => super::screens::analytics::render(frame, content_area, app),
         Screen::RawJson => super::screens::raw_json::render(frame, content_area, app),
+        Screen::WebhookManagement => {
+            super::screens::webhook_management::render(frame, content_area, app)
+        }
         Screen::Help => render_help_screen(frame, content_area),
     }
 
@@ -46,6 +49,7 @@ fn render_title_bar(frame: &mut Frame, area: Rect, app: &App) {
         Screen::Monitor => "Telegram Bot Debugger - Live Monitor",
         Screen::Analytics => "Telegram Bot Debugger - Analytics",
         Screen::RawJson => "Telegram Bot Debugger - Raw JSON Debug",
+        Screen::WebhookManagement => "Telegram Bot Debugger - Webhook Management",
         Screen::Help => "Telegram Bot Debugger - Help",
     };
 
@@ -72,7 +76,7 @@ fn render_status_bar(frame: &mut Frame, area: Rect, app: &App) {
     status_text.push(":Help ".into());
     status_text.push("m".yellow().bold());
     status_text.push(":Message ".into());
-    status_text.push("1-4".yellow().bold());
+    status_text.push("1-5".yellow().bold());
     status_text.push(":Screens ".into());
     status_text.push("F5".yellow().bold());
     status_text.push(":Monitor".into());
@@ -121,6 +125,7 @@ fn render_help_screen(frame: &mut Frame, area: Rect) {
         Line::from(" 2 - Live Monitor (real-time updates)"),
         Line::from(" 3 - Analytics (statistics)"),
         Line::from(" 4 - Raw JSON Debug (API responses)"),
+        Line::from(" 5 - Webhook Management (configure webhooks)"),
         Line::from(""),
         Line::from(vec![
             Span::styled(
@@ -130,6 +135,26 @@ fn render_help_screen(frame: &mut Frame, area: Rect) {
                     .add_modifier(Modifier::BOLD),
             ),
             Span::raw(" - Toggle monitoring (works in background)"),
+        ]),
+        Line::from(""),
+        Line::from(Span::styled(
+            "Webhook Management Screen:",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("i", Style::default().fg(Color::Yellow)),
+            Span::raw(" - Get webhook info"),
+        ]),
+        Line::from(vec![
+            Span::styled("d", Style::default().fg(Color::Yellow)),
+            Span::raw(" - Delete webhook (enable polling)"),
+        ]),
+        Line::from(vec![
+            Span::styled("Enter", Style::default().fg(Color::Yellow)),
+            Span::raw(" - Set webhook from entered URL"),
         ]),
         Line::from(""),
         Line::from(Span::styled(

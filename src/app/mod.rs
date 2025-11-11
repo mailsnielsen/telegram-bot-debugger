@@ -303,6 +303,98 @@ impl App {
             self.ui.mark_dirty();
         }
     }
+
+    // Webhook Management Methods
+    pub fn webhook_url_input(&mut self, c: char) {
+        self.ui.webhook_url_input.push(c);
+        self.ui.mark_dirty();
+    }
+
+    pub fn webhook_url_backspace(&mut self) {
+        self.ui.webhook_url_input.pop();
+        self.ui.mark_dirty();
+    }
+
+    pub async fn get_webhook_info(&mut self) -> Result<()> {
+        let client = self.telegram.get_client()?;
+        let response = client.get_webhook_info().await?;
+
+        if response.ok {
+            if let Some(info) = response.result {
+                let info_text = if info.url.is_empty() {
+                    "No webhook is currently set (polling mode)".to_string()
+                } else {
+                    format!(
+                        "URL: {}\nPending Updates: {}\n{}{}",
+                        info.url,
+                        info.pending_update_count,
+                        if let Some(ip) = info.ip_address {
+                            format!("IP Address: {ip}\n")
+                        } else {
+                            String::new()
+                        },
+                        if let Some(err_msg) = info.last_error_message {
+                            format!("Last Error: {err_msg}")
+                        } else {
+                            "No errors".to_string()
+                        }
+                    )
+                };
+                self.ui.webhook_info_cache = Some(info_text);
+                self.ui.webhook_operation_result = Some("✓ Webhook info retrieved".to_string());
+            }
+        } else {
+            self.ui.webhook_operation_result = Some("✗ Failed to get webhook info".to_string());
+        }
+        self.ui.mark_dirty();
+        Ok(())
+    }
+
+    pub async fn set_webhook(&mut self) -> Result<()> {
+        if self.ui.webhook_url_input.is_empty() {
+            self.ui.webhook_operation_result =
+                Some("✗ Please enter a webhook URL first".to_string());
+            self.ui.mark_dirty();
+            return Ok(());
+        }
+
+        let client = self.telegram.get_client()?;
+        let url = self.ui.webhook_url_input.clone();
+        let response = client.set_webhook(&url, None, None, None, None).await?;
+
+        if response.ok {
+            self.ui.webhook_operation_result = Some(format!("✓ Webhook set to: {url}"));
+            self.ui.webhook_url_input.clear();
+            // Refresh webhook info
+            let _ = self.get_webhook_info().await;
+        } else {
+            let error_msg = response
+                .description
+                .unwrap_or_else(|| "Unknown error".to_string());
+            self.ui.webhook_operation_result = Some(format!("✗ Failed: {error_msg}"));
+        }
+        self.ui.mark_dirty();
+        Ok(())
+    }
+
+    pub async fn delete_webhook(&mut self) -> Result<()> {
+        let client = self.telegram.get_client()?;
+        let response = client.delete_webhook(Some(true)).await?;
+
+        if response.ok {
+            self.ui.webhook_operation_result =
+                Some("✓ Webhook deleted - polling mode enabled".to_string());
+            // Refresh webhook info
+            let _ = self.get_webhook_info().await;
+        } else {
+            let error_msg = response
+                .description
+                .unwrap_or_else(|| "Unknown error".to_string());
+            self.ui.webhook_operation_result = Some(format!("✗ Failed: {error_msg}"));
+        }
+        self.ui.mark_dirty();
+        Ok(())
+    }
 }
 
 impl Default for App {

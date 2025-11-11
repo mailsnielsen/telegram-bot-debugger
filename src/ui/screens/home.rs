@@ -105,6 +105,15 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
             ),
             Span::raw("- Raw JSON Output     - View complete Telegram API responses"),
         ])),
+        ListItem::new(Line::from(vec![
+            Span::styled(
+                "  5 ",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw("- Webhook Management  - Configure webhooks and polling mode"),
+        ])),
         ListItem::new(""),
         ListItem::new(Line::from(vec![Span::styled(
             "Monitoring:",

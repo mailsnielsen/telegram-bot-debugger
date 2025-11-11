@@ -2,7 +2,10 @@ use anyhow::{Context, Result};
 use reqwest::Client;
 use serde_json::json;
 
-use super::types::{GetMeResponse, GetUpdatesResponse, SendMessageResponse};
+use super::types::{
+    DeleteWebhookResponse, GetMeResponse, GetUpdatesResponse, GetWebhookInfoResponse,
+    SendMessageResponse, SetWebhookResponse,
+};
 
 /// HTTP client for interacting with the Telegram Bot API.
 ///
@@ -235,6 +238,216 @@ impl TelegramClient {
     /// This is primarily for internal use or debugging purposes.
     pub fn get_token(&self) -> &str {
         &self.token
+    }
+
+    /// Retrieves the current webhook configuration.
+    ///
+    /// Use this method to get current webhook status. This will return information about
+    /// the webhook URL, pending updates, and any errors that occurred.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The network request fails
+    /// - The response cannot be parsed
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use telegram_bot_debugger::telegram::TelegramClient;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = TelegramClient::new("YOUR_TOKEN".to_string());
+    ///
+    /// let webhook_info = client.get_webhook_info().await?;
+    /// if webhook_info.ok {
+    ///     if let Some(info) = webhook_info.result {
+    ///         if info.url.is_empty() {
+    ///             println!("No webhook is set");
+    ///         } else {
+    ///             println!("Webhook URL: {}", info.url);
+    ///             println!("Pending updates: {}", info.pending_update_count);
+    ///         }
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_webhook_info(&self) -> Result<GetWebhookInfoResponse> {
+        let url = format!("{}/getWebhookInfo", self.base_url);
+        let response = self
+            .client
+            .get(&url)
+            .send()
+            .await
+            .context("Failed to send getWebhookInfo request")?;
+
+        let result = response
+            .json::<GetWebhookInfoResponse>()
+            .await
+            .context("Failed to parse getWebhookInfo response")?;
+
+        Ok(result)
+    }
+
+    /// Sets a new webhook URL for receiving updates.
+    ///
+    /// Use this method to specify a URL and receive incoming updates via an outgoing webhook.
+    /// Whenever there is an update for the bot, Telegram will send an HTTPS POST request to the
+    /// specified URL.
+    ///
+    /// # Arguments
+    ///
+    /// * `webhook_url` - HTTPS URL to send updates to. Use an empty string to remove webhook integration
+    /// * `max_connections` - Optional maximum allowed number of simultaneous HTTPS connections to the webhook (1-100, default 40)
+    /// * `allowed_updates` - Optional list of update types you want your bot to receive (e.g., ["message", "edited_channel_post"])
+    /// * `drop_pending_updates` - Optional flag to drop all pending updates before setting the new webhook
+    /// * `secret_token` - Optional secret token to be sent in a header "X-Telegram-Bot-Api-Secret-Token" (1-256 characters)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The network request fails
+    /// - The webhook URL is invalid (must be HTTPS)
+    /// - The response cannot be parsed
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use telegram_bot_debugger::telegram::TelegramClient;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = TelegramClient::new("YOUR_TOKEN".to_string());
+    ///
+    /// // Set a webhook
+    /// let response = client.set_webhook(
+    ///     "https://example.com/webhook",
+    ///     None,
+    ///     None,
+    ///     None,
+    ///     None,
+    /// ).await?;
+    ///
+    /// if response.ok {
+    ///     println!("Webhook set successfully");
+    /// }
+    ///
+    /// // Set webhook with options
+    /// let response = client.set_webhook(
+    ///     "https://example.com/webhook",
+    ///     Some(100),
+    ///     Some(vec!["message".to_string(), "callback_query".to_string()]),
+    ///     Some(true),
+    ///     Some("my_secret_token".to_string()),
+    /// ).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn set_webhook(
+        &self,
+        webhook_url: &str,
+        max_connections: Option<i32>,
+        allowed_updates: Option<Vec<String>>,
+        drop_pending_updates: Option<bool>,
+        secret_token: Option<String>,
+    ) -> Result<SetWebhookResponse> {
+        let url = format!("{}/setWebhook", self.base_url);
+
+        let mut body = json!({
+            "url": webhook_url,
+        });
+
+        if let Some(max_conn) = max_connections {
+            body["max_connections"] = json!(max_conn);
+        }
+        if let Some(updates) = allowed_updates {
+            body["allowed_updates"] = json!(updates);
+        }
+        if let Some(drop_pending) = drop_pending_updates {
+            body["drop_pending_updates"] = json!(drop_pending);
+        }
+        if let Some(token) = secret_token {
+            body["secret_token"] = json!(token);
+        }
+
+        let response = self
+            .client
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
+            .context("Failed to send setWebhook request")?;
+
+        let result = response
+            .json::<SetWebhookResponse>()
+            .await
+            .context("Failed to parse setWebhook response")?;
+
+        Ok(result)
+    }
+
+    /// Removes the webhook integration.
+    ///
+    /// Use this method to remove webhook integration if you decide to switch back to getUpdates.
+    /// Returns True on success.
+    ///
+    /// # Arguments
+    ///
+    /// * `drop_pending_updates` - Optional flag to drop all pending updates
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The network request fails
+    /// - The response cannot be parsed
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use telegram_bot_debugger::telegram::TelegramClient;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = TelegramClient::new("YOUR_TOKEN".to_string());
+    ///
+    /// // Delete webhook without dropping pending updates
+    /// let response = client.delete_webhook(None).await?;
+    /// if response.ok {
+    ///     println!("Webhook deleted successfully");
+    /// }
+    ///
+    /// // Delete webhook and drop all pending updates
+    /// let response = client.delete_webhook(Some(true)).await?;
+    /// if response.ok {
+    ///     println!("Webhook deleted and pending updates dropped");
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn delete_webhook(
+        &self,
+        drop_pending_updates: Option<bool>,
+    ) -> Result<DeleteWebhookResponse> {
+        let url = format!("{}/deleteWebhook", self.base_url);
+
+        let mut body = json!({});
+        if let Some(drop_pending) = drop_pending_updates {
+            body["drop_pending_updates"] = json!(drop_pending);
+        }
+
+        let response = self
+            .client
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
+            .context("Failed to send deleteWebhook request")?;
+
+        let result = response
+            .json::<DeleteWebhookResponse>()
+            .await
+            .context("Failed to parse deleteWebhook response")?;
+
+        Ok(result)
     }
 }
 
@@ -632,5 +845,338 @@ mod tests {
         let client = create_mock_client(&server, "test_token").await;
         let result = client.send_message(100, &long_text, None).await;
         assert!(result.is_ok());
+    }
+
+    // Webhook management tests
+    #[tokio::test]
+    async fn test_get_webhook_info_with_webhook_set() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/bottest_token/getWebhookInfo")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "ok": true,
+                "result": {
+                    "url": "https://example.com/webhook",
+                    "has_custom_certificate": false,
+                    "pending_update_count": 5,
+                    "max_connections": 40
+                }
+            }"#,
+            )
+            .create();
+
+        let client = create_mock_client(&server, "test_token").await;
+        let result = client.get_webhook_info().await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(response.ok);
+        assert!(response.result.is_some());
+
+        let webhook_info = response.result.unwrap();
+        assert_eq!(webhook_info.url, "https://example.com/webhook");
+        assert!(!webhook_info.has_custom_certificate);
+        assert_eq!(webhook_info.pending_update_count, 5);
+        assert_eq!(webhook_info.max_connections, Some(40));
+    }
+
+    #[tokio::test]
+    async fn test_get_webhook_info_no_webhook() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/bottest_token/getWebhookInfo")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "ok": true,
+                "result": {
+                    "url": "",
+                    "has_custom_certificate": false,
+                    "pending_update_count": 0
+                }
+            }"#,
+            )
+            .create();
+
+        let client = create_mock_client(&server, "test_token").await;
+        let result = client.get_webhook_info().await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(response.ok);
+        assert!(response.result.is_some());
+
+        let webhook_info = response.result.unwrap();
+        assert_eq!(webhook_info.url, "");
+        assert_eq!(webhook_info.pending_update_count, 0);
+    }
+
+    #[tokio::test]
+    async fn test_get_webhook_info_with_error() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/bottest_token/getWebhookInfo")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "ok": true,
+                "result": {
+                    "url": "https://example.com/webhook",
+                    "has_custom_certificate": false,
+                    "pending_update_count": 10,
+                    "last_error_date": 1234567890,
+                    "last_error_message": "Connection timeout",
+                    "max_connections": 40
+                }
+            }"#,
+            )
+            .create();
+
+        let client = create_mock_client(&server, "test_token").await;
+        let result = client.get_webhook_info().await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(response.ok);
+        assert!(response.result.is_some());
+
+        let webhook_info = response.result.unwrap();
+        assert_eq!(webhook_info.url, "https://example.com/webhook");
+        assert_eq!(webhook_info.pending_update_count, 10);
+        assert_eq!(webhook_info.last_error_date, Some(1234567890));
+        assert_eq!(
+            webhook_info.last_error_message,
+            Some("Connection timeout".to_string())
+        );
+    }
+
+    #[tokio::test]
+    async fn test_get_webhook_info_network_error() {
+        let client = TelegramClient {
+            token: "test".to_string(),
+            client: Client::new(),
+            base_url: "http://invalid-domain-that-does-not-exist-12345.com/bottest".to_string(),
+        };
+
+        let result = client.get_webhook_info().await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_set_webhook_success() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/bottest_token/setWebhook")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "ok": true,
+                "description": "Webhook was set"
+            }"#,
+            )
+            .create();
+
+        let client = create_mock_client(&server, "test_token").await;
+        let result = client
+            .set_webhook("https://example.com/webhook", None, None, None, None)
+            .await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(response.ok);
+        assert_eq!(response.description, Some("Webhook was set".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_set_webhook_with_options() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/bottest_token/setWebhook")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "ok": true,
+                "description": "Webhook was set"
+            }"#,
+            )
+            .create();
+
+        let client = create_mock_client(&server, "test_token").await;
+        let result = client
+            .set_webhook(
+                "https://example.com/webhook",
+                Some(100),
+                Some(vec!["message".to_string(), "callback_query".to_string()]),
+                Some(true),
+                Some("my_secret_token".to_string()),
+            )
+            .await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(response.ok);
+    }
+
+    #[tokio::test]
+    async fn test_set_webhook_invalid_url() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/bottest_token/setWebhook")
+            .with_status(400)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "ok": false,
+                "description": "Bad Request: invalid webhook URL"
+            }"#,
+            )
+            .create();
+
+        let client = create_mock_client(&server, "test_token").await;
+        let result = client
+            .set_webhook("http://example.com/webhook", None, None, None, None)
+            .await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(!response.ok);
+        assert!(response.description.is_some());
+        assert!(
+            response
+                .description
+                .unwrap()
+                .contains("invalid webhook URL")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_set_webhook_error_response() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/bottest_token/setWebhook")
+            .with_status(400)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "ok": false,
+                "description": "Bad Request: webhook URL is invalid"
+            }"#,
+            )
+            .create();
+
+        let client = create_mock_client(&server, "test_token").await;
+        let result = client
+            .set_webhook("invalid-url", None, None, None, None)
+            .await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(!response.ok);
+        assert!(response.description.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_delete_webhook_success() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/bottest_token/deleteWebhook")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "ok": true,
+                "description": "Webhook was deleted"
+            }"#,
+            )
+            .create();
+
+        let client = create_mock_client(&server, "test_token").await;
+        let result = client.delete_webhook(None).await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(response.ok);
+        assert_eq!(
+            response.description,
+            Some("Webhook was deleted".to_string())
+        );
+    }
+
+    #[tokio::test]
+    async fn test_delete_webhook_with_drop_pending() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/bottest_token/deleteWebhook")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "ok": true,
+                "description": "Webhook was deleted"
+            }"#,
+            )
+            .create();
+
+        let client = create_mock_client(&server, "test_token").await;
+        let result = client.delete_webhook(Some(true)).await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(response.ok);
+    }
+
+    #[tokio::test]
+    async fn test_delete_webhook_no_webhook_set() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/bottest_token/deleteWebhook")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "ok": true,
+                "description": "Webhook is already deleted"
+            }"#,
+            )
+            .create();
+
+        let client = create_mock_client(&server, "test_token").await;
+        let result = client.delete_webhook(None).await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(response.ok);
+        assert!(response.description.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_delete_webhook_error() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/bottest_token/deleteWebhook")
+            .with_status(400)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "ok": false,
+                "description": "Bad Request: some error"
+            }"#,
+            )
+            .create();
+
+        let client = create_mock_client(&server, "test_token").await;
+        let result = client.delete_webhook(None).await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(!response.ok);
+        assert!(response.description.is_some());
     }
 }

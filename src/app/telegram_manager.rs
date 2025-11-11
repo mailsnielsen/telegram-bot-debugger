@@ -58,6 +58,17 @@ impl TelegramManager {
         }
     }
 
+    /// Returns a reference to the Telegram client.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no client is available (token not set).
+    pub fn get_client(&self) -> Result<&TelegramClient> {
+        self.client
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No Telegram client available - token not set"))
+    }
+
     pub async fn validate_token(&mut self, token_input: &str) -> Result<TokenValidationResult> {
         let token = token_input.trim().to_string();
 

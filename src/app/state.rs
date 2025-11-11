@@ -15,6 +15,7 @@ pub enum Screen {
     Monitor,
     Analytics,
     RawJson,
+    WebhookManagement,
     Help,
 }
 
@@ -65,6 +66,11 @@ pub struct UiState {
     // Analytics cache
     pub statistics: Option<Statistics>,
 
+    // Webhook management screen state
+    pub webhook_url_input: String,
+    pub webhook_info_cache: Option<String>,
+    pub webhook_operation_result: Option<String>,
+
     // Status messages
     pub status_message: Option<String>,
 }
@@ -87,6 +93,9 @@ impl UiState {
             manual_chat_id_input: String::new(),
             test_message_input_focus: InputFocus::MessageText, // Start with MessageText in SelectedChat mode
             statistics: None,
+            webhook_url_input: String::new(),
+            webhook_info_cache: None,
+            webhook_operation_result: None,
             status_message: None,
         }
     }
@@ -121,6 +130,7 @@ impl UiState {
             | Screen::Analytics
             | Screen::RawJson
             | Screen::TestMessage
+            | Screen::WebhookManagement
             | Screen::Help => Some(Screen::Home),
             Screen::Home => {
                 // On home, Esc quits
